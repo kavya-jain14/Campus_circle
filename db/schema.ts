@@ -1,0 +1,4 @@
+import { integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
+export const events=sqliteTable('events',{id:text('id').primaryKey(),name:text('name').notNull(),date:text('date').notNull(),venue:text('venue').notNull(),category:text('category').notNull(),description:text('description').notNull(),featured:integer('featured').notNull().default(0)});
+export const registrations=sqliteTable('registrations',{id:text('id').primaryKey(),eventId:text('event_id').notNull().references(()=>events.id,{onDelete:'cascade'}),name:text('name').notNull(),email:text('email').notNull(),college:text('college').notNull(),year:text('year').notNull(),phone:text('phone').notNull(),createdAt:text('created_at').notNull()},t=>[uniqueIndex('event_email_unique').on(t.eventId,t.email)]);
+export const settings=sqliteTable('settings',{key:text('key').primaryKey(),value:text('value').notNull()});
