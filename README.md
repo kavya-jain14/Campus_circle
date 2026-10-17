@@ -32,7 +32,9 @@ npx tsc --noEmit
 npm run build
 ```
 
-Production uses a secure, HTTP-only, same-site admin cookie. Use HTTPS for admin login. Admin authentication is intentionally a simple shared-password scheme for this recruitment project; use an identity provider and rate limiting before operating a large public club service.
+Production uses a secure, HTTP-only, same-site admin cookie. Its signed expiry is enforced by the server after eight hours, and changing `ADMIN_PASSWORD` invalidates existing sessions. Older permanent password-hash cookies are rejected; admins must sign in again after this update. Logout clears the browser cookie; a copied signed token remains valid until expiry or a password change. Use HTTPS for admin login. Admin authentication is intentionally a simple shared-password scheme for this recruitment project; use an identity provider and rate limiting before operating a large public club service.
+
+Run `npm test` for the admin-session expiry, tampering and password-change regressions. These tests do not replace a live D1/admin deployment smoke test.
 
 ## Demo data
 Four clearly fictional sample events are added once on first database access. Admins may edit or delete them. New registrations are real database records. Event deletion also deletes that event's registrations after confirmation.
