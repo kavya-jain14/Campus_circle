@@ -28,7 +28,9 @@ npm run dev
 Configure a D1 binding named `DB` in your local Cloudflare configuration. Set `ADMIN_PASSWORD` as a runtime secret; never commit it. For local development, use a `.dev.vars` file (ignored by Git). Apply SQL files from `drizzle/` to your local D1 database; the `wrangler d1 migrations` command requires setting `migrations_dir` to `drizzle` in your local configuration. The managed deployment applies generated migrations automatically.
 
 ```sh
+npm run lint
 npx tsc --noEmit
+npm test
 npm run build
 ```
 
