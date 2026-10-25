@@ -38,6 +38,8 @@ Production uses a secure, HTTP-only, same-site admin cookie. Its signed expiry i
 
 Run `npm test` for the admin-session expiry, tampering and password-change regressions. These tests do not replace a live D1/admin deployment smoke test.
 
+Editing an event that another admin has deleted returns 404 and keeps the editor open with an error, so an unsaved edit is never reported as saved. The D1 integration test covers missing/deleted events and saving unchanged fields on an existing event.
+
 Run `npm run test:d1` for the actual HTTP route handlers bundled into an isolated local Cloudflare runtime with a D1 binding. It applies the checked-in migrations to a temporary database, checks admin authentication, rejected writes, event creation/update/deletion, registration persistence and duplicate protection, then restarts the runtime twice to verify saved data and deleted sample events remain correct. The temporary database is deleted afterward. This uses a test-only password and no production bindings; deployed D1 and live admin access still need their own smoke test.
 
 ## Demo data

@@ -58,9 +58,13 @@ test('D1 routes preserve authenticated event and registration changes across run
     assert.match(login.headers.get('set-cookie'), /HttpOnly; Secure; SameSite=Strict/);
     assert.deepEqual(await (await request('admin', { cookie })).json(), { authenticated: true });
     assert.equal((await request('events', { method: 'POST', cookie, body: { ...event, category: 'invalid' } })).status, 400);
+    const missingUpdate = await request('events', { method: 'PUT', cookie, body: { ...event, id: 'missing' } });
+    assert.equal(missingUpdate.status, 404, 'a missing event must not be reported as saved');
+    assert.deepEqual(await missingUpdate.json(), { error: 'This event is no longer available. Refresh the events list.' });
     const created = await request('events', { method: 'POST', cookie, body: event });
     assert.equal(created.status, 201);
     const { id } = await created.json();
+    assert.equal((await request('events', { method: 'PUT', cookie, body: { ...event, id } })).status, 200, 'saving unchanged fields on an existing event still succeeds');
     assert.equal((await request('registrations', { method: 'POST', body: { ...registration, eventId: 'missing' } })).status, 404);
     assert.equal((await request('registrations', { method: 'POST', body: { ...registration, eventId: id }, origin: 'https://other.test' })).status, 403);
     assert.equal((await request('registrations', { method: 'POST', body: { ...registration, eventId: id } })).status, 201);
@@ -78,6 +82,7 @@ test('D1 routes preserve authenticated event and registration changes across run
     assert.equal(registrations[0].email, registration.email);
     assert.equal((await request('events', { method: 'DELETE', body: { id } })).status, 403);
     assert.equal((await request('events', { method: 'DELETE', cookie, body: { id } })).status, 200);
+    assert.equal((await request('events', { method: 'PUT', cookie, body: { ...event, id } })).status, 404, 'editing an event deleted in another admin tab must fail');
     assert.deepEqual(await (await request('registrations', { cookie })).json(), []);
     for (const value of await (await request('events')).json()) {
       assert.equal((await request('events', { method: 'DELETE', cookie, body: { id: value.id } })).status, 200);
