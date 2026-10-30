@@ -47,5 +47,7 @@ Four clearly fictional sample events are added once on first database access. Ad
 
 Dates use the browser's local timezone. Sample college branding is ABES Engineering College. Replace sample information with your club's details before real use.
 
+Event creation and editing require a real ISO calendar datetime. Browser-local values such as `2026-11-01T10:00`, UTC values and explicit timezone offsets are accepted without conversion. Impossible dates such as February 30 are rejected with 400 instead of silently rolling into a different month; rejected edits preserve the stored event.
+
 ## Assets
 No stock images or icon assets are used. Fonts are DM Sans and Manrope, served by Google Fonts under the SIL Open Font License. The interface is built with CSS.

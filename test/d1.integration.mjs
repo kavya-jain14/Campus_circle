@@ -58,12 +58,30 @@ test('D1 routes preserve authenticated event and registration changes across run
     assert.match(login.headers.get('set-cookie'), /HttpOnly; Secure; SameSite=Strict/);
     assert.deepEqual(await (await request('admin', { cookie })).json(), { authenticated: true });
     assert.equal((await request('events', { method: 'POST', cookie, body: { ...event, category: 'invalid' } })).status, 400);
+    const impossibleDates = ['2026-02-30T10:00', '2026-04-31T10:00', '2026-02-29T10:00', '0'];
+    for (const date of impossibleDates) {
+      const invalid = await request('events', { method: 'POST', cookie, body: { ...event, date } });
+      assert.equal(invalid.status, 400, `creating an event must reject ${date}`);
+    }
+    assert.equal((await (await request('events')).json()).length, 4, 'invalid dates must not create records');
+    for (const date of ['2024-02-29T10:30', '2026-11-01T10:00:00.000Z', '2026-11-01T10:00+05:30']) {
+      const valid = await request('events', { method: 'POST', cookie, body: { ...event, date } });
+      assert.equal(valid.status, 201, `creating an event must preserve valid datetime ${date}`);
+      const { id: validId } = await valid.json();
+      const stored = (await (await request('events')).json()).find(value => value.id === validId);
+      assert.equal(stored.date, date, 'validation must not convert the event timezone');
+      assert.equal((await request('events', { method: 'DELETE', cookie, body: { id: validId } })).status, 200);
+    }
     const missingUpdate = await request('events', { method: 'PUT', cookie, body: { ...event, id: 'missing' } });
     assert.equal(missingUpdate.status, 404, 'a missing event must not be reported as saved');
     assert.deepEqual(await missingUpdate.json(), { error: 'This event is no longer available. Refresh the events list.' });
     const created = await request('events', { method: 'POST', cookie, body: event });
     assert.equal(created.status, 201);
     const { id } = await created.json();
+    for (const date of impossibleDates) {
+      assert.equal((await request('events', { method: 'PUT', cookie, body: { ...event, id, date } })).status, 400, `editing an event must reject ${date}`);
+      assert.equal((await (await request('events')).json()).find(value => value.id === id).date, event.date, 'rejected edits must preserve the saved date');
+    }
     assert.equal((await request('events', { method: 'PUT', cookie, body: { ...event, id } })).status, 200, 'saving unchanged fields on an existing event still succeeds');
     assert.equal((await request('registrations', { method: 'POST', body: { ...registration, eventId: 'missing' } })).status, 404);
     assert.equal((await request('registrations', { method: 'POST', body: { ...registration, eventId: id }, origin: 'https://other.test' })).status, 403);
